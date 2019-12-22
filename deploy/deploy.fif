@@ -6,17 +6,18 @@
 "TonUtil.fif" include
 
 { ."usage:  <filename-base>" cr
-  ."Creates a request to deploy token contract created by token-contract.fc, "
+  ."Creates a request to deploy mixer contract created by laundromat.fc, "
   ."with private key loaded from file <filename-base>.pk." cr
-  ."<owner-address-or-file> is a TON address or a file if prefixed with @." cr
   ."Contract address is saved into file <filename-base>.addr and deployment query is "
-  ."saved into queries/deploy.boc" cr
+  ."saved into deploy.boc" cr
   ."Example: " cr
-  ."fift -s deploy.fif wallets/contract-wallet @wallets/alice-wallet.addr 0 1000 TON TON" cr
+  ."fift -s deploy.fif wallets/contract-wallet" cr
   1 halt
 } : usage
 
-$0 =: filebase
+$# 1 < ' usage if
+
+$1 =: filebase
 
 -1 constant wc
 

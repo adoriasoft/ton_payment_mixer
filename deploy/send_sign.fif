@@ -11,11 +11,9 @@
   ."Query body should not be directly sent to the network. Use wallet.fif script with -B <query-body> parameter "
   ."to embed query body in the wallet contract query." cr
   ."Example: " cr
-  ."fift -s transfer.fif 0 @wallets/bob-wallet.addr 10" cr
+  ."fift -s send-sign.fif" cr
   1 halt
 } : usage
-
-$# 3 < ' usage if
 
 0 constant query_id // defines query id for the message, may remain 0 or 1 for messages from simple wallets.
 354 constant v // value which is used in the signature generation and validation (Learn more about ring signatures)
