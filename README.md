@@ -1,50 +1,62 @@
-# Laundromat contract
+# Ring signature based mixer contract
 
 ### Preparation
 
-    You have to already build the func compiler and fift interpreter with the lite client of the TON blockchain.
-    You can downloaded it from this link https://github.com/ton-blockchain/ton .
+    You have to already build the func compiler, fift interpreter and the lite client of the TON blockchain.
+    You can download it from [https://github.com/ton-blockchain/ton].
     
 
 ### Description
 
-    This is a smart contract which can help to obfuscate your money. It means that any person will not be able to understand from whom to whom your coins was sent.
-    This smart contract is based on the ring signatures https://en.wikipedia.org/wiki/Ring_signature and used RSA encryption/decryption algorithms with their public keys https://en.wikipedia.org/wiki/RSA_(cryptosystem).
+    This is a smart contract which can help to obfuscate your Grams. It means that noone should be able to link the recipient and the sender of the coins.
+    This smart contract is based on the ring signatures https://en.wikipedia.org/wiki/Ring_signature and uses RSA encryption/decryption algorithms with their public keys https://en.wikipedia.org/wiki/RSA_(cryptosystem).
 
     
 ### Manual
 
-    Compile the laundromat.fc
-    ``` 
-    .\func -AP -o /laundromat/generated/laundromat_code.fif  /laundromat/src/stdlib.fc /laundromat/src/RSA.fc /laundromat/src/ring_sign.fc /laundromat/src/laundromat.fc
+1. Compile the app
+
+    ```bash 
+    $ ./func -AP -o generated/laundromat_code.fif src/stdlib.fc src/RSA.fc src/ring_sign.fc src/laundromat.fc
     ```
     
-    Generated code will be placed in the generated folder.
+    Generated code will be placed in the 'generated' folder.
+
+2. Find participants
+
+    You have to find at least 2 participants of this smart contract with their wallet addresses from which their will be able to create a ring signature.
+    (For this purpose you can you use the standard wallet.fif)
     
-    Next you have to find at least 2 participants of this smart contract with their wallet addresses from which their will be send the valid signature.
-    (For these purposes you can you use the standard wallet.fif )
+    Each participant should generate his public key pair of the RSA signature ('e' and 'n').
+    In the tests we will take hardcoded public keys:
+
+    ```
+    e1 = 1275, e2 = 7887, e3 = 10811, n1 = 1357, n2 = 8083, n3 = 11021
+    ```
+
+    and
+
+    ```
+    d1, d2, d3 which are the inverse elements of the e_i by the mod.
+    ```
+
+3. Generate real public keys
+
+    Use 'src/generate_sign.fc' to generate new public keys.
+
+4. Configure contract
     
-    After that all these participants have to generate their own public key pair of the RSA signature ('e' and 'n').
-    In the tests we will take such values of the public keys e1 = 1275, e2 = 7887, e3 = 10811, n1 = 1357, n2 = 8083, n3 = 11021, and d1, d2 ,d3 which are the inverse elements of the e_i by the mod.
-    (You look into the 'laundromat/src/generate_sign.fc' and you the code from there to generate your own values)
+    After collecting all of the public keys and user addresses you can configure the deploy script 'deploy/deploy.fif'
     
-    After you will have all these values the public keys off all participants and their addresses you can set up the 'laundromat/deploy/deploy.fif' script.
-    
-    Here put the value of your addresses
+    Put user addresses here:
     ```
     103835235685005910186741582083202827840114002218372192284974940710643891936425 constant addr1
     103835235685005910186741582083202827840114002218372192284974940710643891936424 constant addr2
     103835235685005910186741582083202827840114002218372192284974940710643891936423 constant addr3
-    
-    <b addr1 s, 0 8 u, b> <s constant addr1
-    <b addr2 s, 0 8 u, b> <s constant addr2
-    <b addr3 s, 0 8 u, b> <s constant addr3
-
-    addr1 0 dictnew 32 idict! . 
-    addr2 swap 1 swap 32 idict! .
-    addr3 swap 2 swap 32 idict! . constant approve_addresses
     ```
-    Here put the value of your public keys in the correspond order for the addresses
+
+    Put user public keys here:
+    
     ```
     1275 constant e1
     7887 constant e2
@@ -53,30 +65,68 @@
     1357 constant n1
     8083 constant n2
     11021 constant n3
-    
-    <b e1 256 u, n1 256 u, b> <s constant pubkey1
-    <b e2 256 u, n2 256 u, b> <s constant pubkey2
-    <b e3 256 u, n3 256 u, b> <s constant pubkey3
-    
-    pubkey1 0 dictnew 32 idict! . 
-    pubkey2 swap 1 swap 32 idict! .
-    pubkey3 swap 2 swap 32 idict! . constant pubkey_array
-    
     ```
     
-    And the last step is too fill the number of participants and payout value
+    Fill the number of participants and payout value:
     ```
     3 constant number_of_participants
     10000000000 constant payment_amount
     ```
+
+5. Compile deploy script
+
+    ```bash 
+    $ ./fift -s deploy/deploy.fif wallets/contract-wallet
+    ```
+
+    Save output somewhere, we will use it later. Take a look on the next fields:
+
+    - "Non-bounceable address (for init)" - Will use it as a {contract id}.
+    - "Bounceable address (for later access)" - Will use it as a {contract id inited}.
+
+6. Deploy contract
+
+    Send the deployment query (deploy.boc) using the lite-client:
+
+      Get last block
+      ```bash
+      lite-client> last 
+       ```
     
-    After that you have to deploy it and every participant have to send for 11 Grams to this smart contract.
-    (1 Gram more it is a fee for the successful work of the smart contract. It can be changeable it only needs for the gas purposes.)
+      Publish contract
+      ```bash
+      lite-client> sendfile deploy.boc
+      ```
+
+      *Deposit some test grams in to the contract address.*
+       - Use TestTonBot. (Telegram)
+       - Send {contract id}.
+       - Chose any amount.
+      
+      Update state
+      ```bash
+      lite-client> last
+      ```
     
-    The next step is to generate the valid signatures and send it to the smart contract as a internal message.
-    For these you can also use the 'laundromat/src/generate_sign.fc' code for the signature generation.
-    For must to have your private key ('d' value from the RSA) number array of public keys (you can use the 'get_public_keys_array()' function from the laundromat smart contract).
-    !!!!! The order of the public keys should be the same that their are was in the deploy.fif
+      We can see new information about contract if it is deployed.
+      ```bash
+      lite-client> getaccount {contract id}
+      ```
+
+7. Collect Grams from the users
+    
+    Every participant should send 11 Grams to the mixer contract.
+    
+    **Important note: _1 Gram is a fee for the contract processing. This value may vary and is being used for the gas purposes._**
+
+8. Prepare signatures
+    
+    The next step is to generate valid signatures and send it to the contract as an internal message.
+    You should use 'src/generate_sign.fc' code for the signature generation.
+    You should insert your private key ('d' value from the RSA) and an array of public keys (you can use the 'get_public_keys_array()' function from the 'laundromat' contract).
+
+    **Important note: _The order of the public keys should be the same as in the deploy.fif_**
+    
     ```
     pubkey1 0 dictnew 32 idict! . 
     pubkey2 swap 1 swap 32 idict! .
