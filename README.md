@@ -2,14 +2,14 @@
 
 ### Preparation
 
-    You have to already build the func compiler, fift interpreter and the lite client of the TON blockchain.
-    You can download it from [https://github.com/ton-blockchain/ton].
+  You have to already build the func compiler, fift interpreter and the lite client of the TON blockchain.
+  You can download it from [https://github.com/ton-blockchain/ton].
     
 
 ### Description
 
-    This is a smart contract which can help to obfuscate your Grams. It means that noone should be able to link the recipient and the sender of the coins.
-    This smart contract is based on the ring signatures https://en.wikipedia.org/wiki/Ring_signature and uses RSA encryption/decryption algorithms with their public keys https://en.wikipedia.org/wiki/RSA_(cryptosystem).
+  This is a smart contract which can help to obfuscate your Grams. It means that noone should be able to link the recipient and the sender of the coins.
+  This smart contract is based on the ring signatures https://en.wikipedia.org/wiki/Ring_signature and uses RSA encryption/decryption algorithms with their public keys https://en.wikipedia.org/wiki/RSA_(cryptosystem).
 
     
 ### Manual
@@ -99,9 +99,10 @@
       ```
 
       *Deposit some test grams in to the contract address.*
-       - Use TestTonBot. (Telegram)
-       - Send {contract id}.
-       - Chose any amount.
+
+      - Use TestTonBot. (Telegram)
+      - Send {contract id}.
+      - Chose any amount.
       
       Update state
       ```bash
@@ -132,72 +133,80 @@
     pubkey2 swap 1 swap 32 idict! .
     pubkey3 swap 2 swap 32 idict! . constant pubkey_array
     ```
-    The parameters of the signature generation are the 'message' random 'v' and the random 'x' values the number of them should be '<number of public keys> - 1'
-    As a result of the signature generation you have to obtain the last 'x' value which will satisfies the ring sign equation.
-    The 'sign_message()' function will return to you an array with all 'x' values which are corresponds to the public keys array and you have to send it in the same order.
+
+    The parameters of the signature generation are the 'message' random 'v' and the random 'x' values. You should have them as many as '\<number of public keys\> - 1'
+    As a result of the signature generation you have to obtain the last 'x' value which satisfies the ring signature equation.
+    The 'sign_message()' function will return to you an array with all 'x' values which correspond to the public keys array and you have to send it in the same order.
     
-    After you will have your signature you can send it to the smart contact to get your funds.
-    You can set up the 'laundromat/deploy/send_sign.fif' script.
-    First put the payout addresses
+    As soon as you have your signature you can send it to the mixer contact to get your funds.
+
+9. Configure send script
+
+    You can configure the 'deploy/send_sign.fif' script now.
+   
+    Insert the payout addresses
     ```
     103835235685005910186741582083202827840114002218372192284974940710643891936422 constant payout_addr
     ```
-    Then put your set of the x values and 'v', 'message' values
+
+    Then insert your set of the x values and 'v', 'message' values
     ```
     1355 constant x_1
     485 constant x_2
     11019 constant x_3
-
-    <b x_1 256 u, b> <s constant x_1
-    <b x_2 256 u, b> <s constant x_2
-    <b x_3 256 u, b> <s constant x_3
     ```
     
     ```
     354 constant v
     547 constant message
     ```
-    Query body should not be directly sent to the network. Use wallet.fif script with -B <query-body> parameter to embed query body in the wallet contract query.
+    **Important note: _Query body should not be directly sent to the network. Use wallet.fif script with -B <query-body> parameter to embed query body in the wallet contract query._**
     
-    After all this steps you will get your funds.
+10. Wait for your funds
+
+    Contract should automatically send your funds now.
+
     
 ### Testing
-    Also you cant test the work of the smart contract, they are in the laundromat/tests folder
     
-    You can just run them
-    ```
-        .\fift -I /laundromat/lib /laundromat/tests/test1.fif
-    ```
+  Offline test scripts are in the 'tests' folder
     
-    The expected result of the test1. It is a positive test with the correct values)
-    ```
-    0 3 10000000000 1 1 1
-    ```
-    The first '0' it is from the runvmctx command
-    '3' - the number of participants
-    '10000000000' - payout amount
-    '1' - 'init' flag it is only for recv_external() function
-    '1' - 'money_available' flag, it means that the smart contract has enough money ( > 'number_of_participants * payout_amount') and ready to send funds
-    '1' - 'is_successful' flag, it means that the signature is correct and funds has successfully been sent. (Only for test purposes)
+  You can simply run them
+  ```bash
+  $ ./fift -I lib tests/test1.fif
+  ```
+  
+1. Positive test with correct values
+
+  The expected result of the test1
+  ```
+  0 3bash 10000000000 1 1 1
+  ```
+
+  The first '0' is result of the runvmctx command
+  '3' - the number of participants
+  '10000000000' - payout amount
+  '1' - 'init' flag is only for recv_external() function
+  '1' - 'money_available' flag; it means that the smart contract has enough money ( > 'number_of_participants * payout_amount') and ready to send funds
+  '1' - 'is_successful' flag; it means that the signature is correct and funds has successfully been sent. (Only for test purposes)
     
-    The expected result of the test2. It is a negative test where from the one address participant tries to get one more funds.
-    ```
-    0 3 10000000000 1 1 0
-    ```
-    
-    The expected result of the test3. It is a negative test with the incorrect signature values (was changed an x_1 value).
-    ```
-    0 3 10000000000 1 1 0 
-    ```
-    
-    The expected result of the test4. It is a negative test where the smart contract have not enough funds and not be ready to send money.
-    ```
-    0 3 10000000000 1 0 0 
-    ```
-    
-    
-    
-    
-    
-    
-    
+2. Negative test where one of the participants is trying to get more funds
+
+  The expected result of the test2
+  ```bash
+  0 3 10000000000 1 1 0
+  ```
+ 
+3. Negative test with incorrect signature values (x_1 value was changed)
+  
+  The expected result of the test3
+  ```bash
+  0 3 10000000000 1 1 0 
+  ```
+  
+4. Negative test where the contract does not have enough funds and not ready to send money
+
+  The expected result of the test4
+  ```
+  0 3 10000000000 1 0 0 
+  ```
