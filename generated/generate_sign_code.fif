@@ -1,0 +1,302 @@
+"Asm.fif" include
+// automatically generated from `../smartcont/stdlib.fc` `../laundromat/src/RSA.fc` `../laundromat/src/ring_sign.fc` `../laundromat/src/generate_sign.fc`
+PROGRAM{
+  DECLPROC mulmod
+  DECLPROC gcd
+  DECLPROC inverse_el
+  DECLPROC modexp
+  DECLPROC generating_keys
+  DECLPROC encrypt
+  DECLPROC decrypt
+  DECLPROC find_min
+  DECLPROC sign_message
+  DECLPROC check_sign
+  DECLPROC main
+  mulmod PROC:<{
+    MULDIVMOD
+    NIP
+  }>
+  gcd PROC:<{
+    OVER
+    0 EQINT
+    IFJMP:<{
+      2DROP
+      0 PUSHINT
+      1 PUSHINT
+    }>
+    s0 s1 PUSH2
+    MOD
+    s2 PUSH
+    gcd CALLDICT
+    s2 s3 XCHG2
+    DIV
+    OVER
+    MUL
+    s1 s2 XCHG
+    SUB
+    SWAP
+  }>
+  inverse_el PROC:<{
+    TUCK
+    gcd CALLDICT
+    DROP
+    SWAP
+    MOD
+  }>
+  modexp PROC:<{
+    OVER
+    0 EQINT
+    IFJMP:<{
+      3 BLKDROP
+      1 PUSHINT
+    }>
+    1 PUSHINT
+    WHILE:<{
+      s2 PUSH
+      0 NEQINT
+    }>DO<{
+      s2 PUSH
+      1 PUSHINT
+      AND
+      1 EQINT
+      IF:<{
+        s3 s1 PUSH2
+        mulmod CALLDICT
+      }>
+      s3 s0 s1 XCPU2
+      mulmod CALLDICT
+      s0 s2 XCHG
+      1 RSHIFT#
+      s0 s1 s3 XCHG3
+    }>
+    s0 s3 XCHG
+    3 BLKDROP
+  }>
+  generating_keys PROC:<{
+    2DUP
+    MUL
+    s0 s2 XCHG
+    DEC
+    SWAP
+    DEC
+    MUL
+    DUP
+    DEC
+    s0 s1 PUXC
+    inverse_el CALLDICT
+    s0 s2 XCHG
+  }>
+  encrypt PROC:<{
+    modexp CALLDICT
+  }>
+  decrypt PROC:<{
+    modexp CALLDICT
+  }>
+  find_min PROC:<{
+    0 PUSHINT
+    s2 PUSH
+    32 PUSHINT
+    DICTUGET
+    NULLSWAPIFNOT
+    DROP
+    1 PUSHINT
+    s3 PUSH
+    32 PUSHINT
+    DICTUGET
+    NULLSWAPIFNOT
+    DROP
+    SWAP
+    8 PUSHPOW2
+    SDSKIPFIRST
+    256 PLDU
+    SWAP
+    8 PUSHPOW2
+    SDSKIPFIRST
+    256 PLDU
+    MIN
+    2 PUSHINT
+    s0 s2 XCHG
+    -2 ADDCONST
+    REPEAT:<{
+      s1 s2 PUSH2
+      32 PUSHINT
+      DICTUGET
+      NULLSWAPIFNOT
+      DROP
+      8 PUSHPOW2
+      SDSKIPFIRST
+      256 PLDU
+      MIN
+      SWAP
+      INC
+      SWAP
+    }>
+    NIP
+    NIP
+  }>
+  sign_message PROC:<{
+    s6 s5 PUSH2
+    find_min CALLDICT
+    s4 s5 PUXC
+    SUB
+    s5 PUSH
+    MOD
+    NEWDICT
+    0 PUSHINT
+    s0 s8 PUXC
+    REPEAT:<{
+      s0 s9 PUSH2
+      32 PUSHINT
+      DICTUGET
+      NULLSWAPIFNOT
+      DROP
+      256 LDU
+      s6 s1 PUSH2
+      NEQ
+      IF:<{
+        256 PLDU
+        DUP
+        -2 ADDCONST
+        s0 s1 PUXC
+        s1 s3 XCHG
+        encrypt CALLDICT
+        s1 s4 XCHG
+        SUB
+        s8 PUSH
+        MOD
+        NEWC
+        s1 s4 XCHG
+        256 STU
+        ENDC
+        CTOS
+        SWAP
+        32 PUSHINT
+        s1 s3 s3 PUXC2
+        DICTUSET
+      }>ELSE<{
+        2DROP
+        s8 POP
+        s7 s(-1) PUXC
+      }>
+      SWAP
+      INC
+    }>
+    DROP
+    s3 POP
+    s7 POP
+    s6 s3 XCHG2
+    SUB
+    s0 s3 XCHG2
+    MOD
+    -ROT
+    decrypt CALLDICT
+    NEWC
+    256 STU
+    ENDC
+    CTOS
+    s0 s2 XCHG
+    32 PUSHINT
+    DICTUSET
+  }>
+  check_sign PROC:<{
+    s4 s2 PUSH2
+    find_min CALLDICT
+    s1 s2 PUXC
+    ADD
+    s2 PUSH
+    MOD
+    0 PUSHINT
+    s0 s4 XCHG
+    REPEAT:<{
+      s3 s5 PUSH2
+      32 PUSHINT
+      DICTUGET
+      NULLSWAPIFNOT
+      DROP
+      256 LDU
+      256 PLDU
+      s5 s6 PUSH2
+      32 PUSHINT
+      DICTUGET
+      NULLSWAPIFNOT
+      DROP
+      256 PLDU
+      -ROT
+      encrypt CALLDICT
+      ADD
+      s2 PUSH
+      MOD
+      s0 s3 XCHG
+      INC
+      s0 s3 XCHG
+    }>
+    s3 POP
+    s3 POP
+    s3 POP
+    s0 s2 XCHG
+    MOD
+    EQUAL
+    IFJMP:<{
+      1 PUSHINT
+    }>
+    0 PUSHINT
+  }>
+  main PROC:<{
+    23 PUSHINT
+    59 PUSHINT
+    137 PUSHINT
+    OVER
+    103 PUSHINT
+    s0 s4 XCHG
+    107 PUSHINT
+    s0 s4 XCHG
+    generating_keys CALLDICT
+    s2 POP
+    2SWAP
+    generating_keys CALLDICT
+    s6 s5 XCHG2
+    generating_keys CALLDICT
+    s2 POP
+    547 PUSHINT
+    354 PUSHINT
+    NEWC
+    s1 s6 XCHG
+    256 STU
+    s1 s6 XCHG
+    256 STU
+    ENDC
+    CTOS
+    s7 PUSH
+    NEWC
+    256 STU
+    s7 s(-1) PUXC
+    256 STU
+    ENDC
+    CTOS
+    NEWC
+    s1 s3 XCHG
+    256 STU
+    s1 s3 XCHG
+    256 STU
+    ENDC
+    CTOS
+    NEWDICT
+    0 PUSHINT
+    s2 s4 XCHG
+    SWAP
+    32 PUSHINT
+    DICTUSET
+    1 PUSHINT
+    SWAP
+    32 PUSHINT
+    DICTUSET
+    2 PUSHINT
+    SWAP
+    32 PUSHINT
+    DICTUSET
+    s0 s5 XCHG
+    3 PUSHINT
+    s0 s5 XCHG
+    sign_message CALLDICT
+  }>
+}END>c

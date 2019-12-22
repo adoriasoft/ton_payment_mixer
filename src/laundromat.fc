@@ -1,0 +1,166 @@
+;;// Copyright (c) 2019 adoriasoft
+;;// Andrey Lekar andrey_lekar@adoriasoft.com
+;;// Alexey Pozhylenkov alex_pozhilenkov@adoriasoft.com
+;;// Volodymyr Kostanda ceo@adoriasoft.com
+
+;; ---------------------------------- operations defines
+int Op::check_sign()         { return 1;}
+
+
+;; messages states
+
+int Ok() { return 0;}
+int Fail() { return 1;}
+
+
+() send_message(slice addr, int state, int query_id, int body, int grams, int mode) impure {
+	builder msg = begin_cell()
+		.store_uint (0x18, 6)
+		.store_slice(addr)
+		.store_grams(grams)
+		.store_uint(0, 1 + 4 + 4 + 64 + 32 + 1 + 1)
+		.store_uint(state, 32)
+		.store_uint(query_id, 64);
+	if (body >= 0) {
+		msg~store_uint(body, 32);
+	}
+	send_raw_message(msg.end_cell(), mode);
+}
+
+
+;; load data from the contract storage
+_ load_data() {
+  slice ds = get_data().begin_parse();
+  var res = (
+    ds~load_uint(32),
+    ds~load_uint(64),
+    ds~load_uint(8),
+    ds~load_uint(8),
+    ds~load_uint(8),
+    ds~load_grams(),
+    ds~load_dict(),
+    ds~load_dict()
+  );
+  ds.end_parse();
+  return res;
+}
+
+;; save data in the contract storage
+() store_data(int number_of_participants, int payment_amount, cell pubkey_array, cell approve_addresses, int money_available, int grams, int is_successful) impure {
+  set_data(
+    begin_cell()
+    .store_uint(number_of_participants, 32)
+    .store_uint(payment_amount, 64)
+    .store_uint(1, 8) ;; init flag
+    .store_uint(money_available, 8) ;; flag that you can take your money, enables after that contact will received payment_amount * number_of_participants grams
+    .store_uint(is_successful, 8) ;; it is a test value
+    .store_grams(grams)
+    .store_dict(pubkey_array) ;; contains pubkey array which contains slices ( <b 'e' 256 u, 'n' 256 u, b> <s)
+    .store_dict(approve_addresses) ;; contains addresses from which we can get the ring signatures (<b addr1 s, 0 8 u, b>) the second 0 means that this address is already used or not
+    .end_cell());
+}
+
+(int, int) if_exist(cell addr_array, int size, slice addr) {
+    int i = 0;
+    int result = 0;
+    int index = -1;
+    repeat (size) {
+        (slice value, _) = addr_array.udict_get?(32, i);
+        slice addr1 = value~load_msg_addr();
+        (_, int y) = addr.parse_std_addr();
+        (_, int y1) = addr1.parse_std_addr();
+        if(y == y1) {
+            result = 1;
+            index = i;
+        }
+        i += 1;
+    }
+    
+    return (result, index);
+}
+
+() recv_internal(int msg_value, cell in_msg_cell, slice in_msg) impure {
+    if (in_msg.slice_empty?()) {
+        ;; inbound message has empty body
+        return ();
+    }
+    
+    slice cs = in_msg_cell.begin_parse();
+    int flags = cs~load_uint(4);
+    
+    int op = in_msg~load_uint(8);
+
+    ;; ignore all bounced messages
+    ;; int_msg_info$0 ihr_disabled:Bool bounce:Bool bounced:Bool
+    if (flags & 1) {
+        return ();
+    }
+    
+    int query_id = in_msg~load_uint(64);
+    slice addr = cs~load_msg_addr();
+    
+    
+    (int number_of_participants, int payment_amount, _, int money_available,  _, int grams, cell pubkey_array, cell approve_addresses) = load_data();
+    
+    if(grams > number_of_participants * payment_amount) {
+        money_available = 1;
+    }
+    
+    if(money_available == 0) {
+        store_data(number_of_participants, payment_amount, pubkey_array, approve_addresses, money_available, grams, 0);
+        return send_message(addr, Fail(), query_id, 1, 0, 0);
+    }
+    
+    if(op == Op::check_sign())
+    {
+        (int exist, int index) = if_exist(approve_addresses, number_of_participants, addr);
+        
+        if(exist == 0) {
+            store_data(number_of_participants, payment_amount, pubkey_array, approve_addresses, money_available, grams, 0);
+            return send_message(addr, Fail(), query_id, 1, 0, 0);
+        }
+        
+        (slice is_used, _) = approve_addresses.udict_get?(32, index);
+        is_used~load_msg_addr();
+        int check_value = is_used~load_uint(8);
+        is_used.end_parse();
+        
+        if(check_value) {
+            store_data(number_of_participants, payment_amount, pubkey_array, approve_addresses, money_available, grams, 0);
+            return send_message(addr, Fail(), query_id, 1, 0, 0);
+        }
+        
+        slice payout_address = in_msg~load_msg_addr();
+        cell x_array = in_msg~load_dict();
+        int v = in_msg~load_uint(256);
+        int message = in_msg~load_uint(256);
+        
+        if(check_sign(pubkey_array, x_array, number_of_participants, message, v))
+        {
+            approve_addresses~udict_set(32, index, begin_cell().store_slice(addr).store_uint(1,8).end_cell().begin_parse()); ;; mark as used
+            store_data(number_of_participants, payment_amount, pubkey_array, approve_addresses, money_available, grams, 1);
+            return send_message(payout_address, Ok(), query_id, 1, payment_amount, 0);
+        }
+        else {
+            store_data(number_of_participants, payment_amount, pubkey_array, approve_addresses, money_available, grams, 0);
+            return send_message(addr, Fail(), query_id, 1, 0, 0);
+        }
+    }
+    
+    return ();
+} 
+
+() recv_external(slice in_msg) impure {
+    (int number_of_participants, int payment_amount, int inited, int money_available, int is_successful, int grams, cell pubkey_array, cell approve_addresses) = load_data();
+    throw_if(33, inited);
+    accept_message();
+    
+    store_data(number_of_participants, payment_amount, pubkey_array, approve_addresses, money_available, grams, 1);
+}
+
+
+
+(cell, int) get_public_keys_array() method_id {
+    (int number_of_participants, _, _, _,  _, _, cell pubkey_array, _) = load_data();
+    return (pubkey_array, number_of_participants);
+}

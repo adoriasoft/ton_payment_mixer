@@ -1,0 +1,60 @@
+(int, int) mulmod1(int a, int b, int p) asm "MULDIVMOD";
+
+int mulmod(int a, int b, int p) {
+    (_, int r) = mulmod1(a, b, p);
+    return r;
+}
+
+;; This is the eclidean algorithm https://en.wikipedia.org/wiki/Euclidean_algorithm
+(int, int) gcd (int a, int b){
+    if (a == 0) {
+        int x = 0;
+        int y = 1;
+        return (x, y);
+    }
+    (int x, int y) = gcd(b % a, a);
+    return (y - (b / a) * x, x);
+}
+
+int inverse_el(a, m) {
+    (int x, _) = gcd(a, m);
+    return x % m;
+}
+
+int modexp(int x, int y, int n) {
+    if (y == 0) {
+        return 1;
+    }
+    else {
+        int result = 1;
+        int z = x;
+        while (y != 0) {
+            if(y & 1 == 1) {
+                result = mulmod(result, z, n);
+            }
+            z = mulmod(z, z, n);
+            y >>= 1;
+        }
+        return result;
+    }
+}
+
+
+;; https://en.wikipedia.org/wiki/RSA_(cryptosystem)
+
+var generating_keys(int p, int q) {
+    int n = p * q;
+    int phi_n = (p - 1) * (q - 1);
+    int e = phi_n - 1;
+    int d = inverse_el(e, phi_n);
+    
+    return (d, e, n);
+}
+
+int encrypt(int message, int e, int n) {
+    return modexp(message, e, n);
+}
+
+int decrypt(int enc_message, int d, int n) {
+    return modexp(enc_message, d, n);
+}

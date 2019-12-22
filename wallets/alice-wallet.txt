@@ -1,0 +1,4 @@
+new wallet address = -1:1a662dcebd422fb711a9281f9149829d43f8d305a177028756e80540e5ca8e0c 
+(Saving address to file alice-wallet.addr)
+Non-bounceable address (for init): 0f8aZi3OvUIvtxGpKB-RSYKdQ_jTBaF3AodW6AVA5cqODItv
+Bounceable address (for later access): kf8aZi3OvUIvtxGpKB-RSYKdQ_jTBaF3AodW6AVA5cqODNaq

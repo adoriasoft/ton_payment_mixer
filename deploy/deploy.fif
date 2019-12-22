@@ -1,0 +1,88 @@
+// Copyright (c) 2019 adoriasoft
+// Andrey Lekar andrey_lekar@adoriasoft.com
+// Alexey Pozhylenkov alex_pozhilenkov@adoriasoft.com
+// Volodymyr Kostanda ceo@adoriasoft.com
+
+"TonUtil.fif" include
+
+{ ."usage:  <filename-base>" cr
+  ."Creates a request to deploy token contract created by token-contract.fc, "
+  ."with private key loaded from file <filename-base>.pk." cr
+  ."<owner-address-or-file> is a TON address or a file if prefixed with @." cr
+  ."Contract address is saved into file <filename-base>.addr and deployment query is "
+  ."saved into queries/deploy.boc" cr
+  ."Example: " cr
+  ."fift -s deploy.fif wallets/contract-wallet @wallets/alice-wallet.addr 0 1000 TON TON" cr
+  1 halt
+} : usage
+
+$0 =: filebase
+
+filebase ".pk" $+ constant filename
+filebase ".addr" $+ constant addrname
+"../queries/deploy.boc" constant deployname
+
+."Creating contract wallet in workchain " wc . cr
+
+filename load-generate-keypair
+drop drop
+
+"../generated/laundromat_code.fif" include constant appcode
+
+103835235685005910186741582083202827840114002218372192284974940710643891936425 constant addr1
+103835235685005910186741582083202827840114002218372192284974940710643891936424 constant addr2
+103835235685005910186741582083202827840114002218372192284974940710643891936423 constant addr3
+
+<b b{100} s, -1 8 i, addr1 256 u, b> <s constant addr1
+<b b{100} s, -1 8 i, addr2 256 u, b> <s constant addr2
+<b b{100} s, -1 8 i, addr3 256 u, b> <s constant addr3
+
+<b addr1 s, 0 8 u, b> <s constant addr1
+<b addr2 s, 0 8 u, b> <s constant addr2
+<b addr3 s, 0 8 u, b> <s constant addr3
+
+addr1 0 dictnew 32 idict! . 
+addr2 swap 1 swap 32 idict! .
+addr3 swap 2 swap 32 idict! . constant approve_addresses
+
+1275 constant e1
+7887 constant e2
+10811 constant e3
+
+1357 constant n1
+8083 constant n2
+11021 constant n3
+
+<b e1 256 u, n1 256 u, b> <s constant pubkey1
+<b e2 256 u, n2 256 u, b> <s constant pubkey2
+<b e3 256 u, n3 256 u, b> <s constant pubkey3
+
+pubkey1 0 dictnew 32 idict! . 
+pubkey2 swap 1 swap 32 idict! .
+pubkey3 swap 2 swap 32 idict! . constant pubkey_array
+
+3 constant number_of_participants
+10 constant payment_amount
+0 constant is_successful
+
+<b number_of_participants 32 u, payment_amount 32 u, is_successful 8 u, pubkey_array dict, approve_addresses dict, b> constant appdata
+
+null constant applibs
+<b b{0011} s, appcode ref, appdata ref, applibs dict, b> constant stateinit
+<b b{0} s, b> constant extmsg
+
+stateinit ."StateInit: " <s csr. cr
+stateinit hashu wc swap 2dup 2constant wallet_addr
+
+."new wallet address = " 2dup .addr cr
+2dup addrname save-address-verbose
+."Non-bounceable address (for init): " 2dup 7 .Addr cr
+."Bounceable address (for later access): " 6 .Addr cr
+
+<b b{1000100} s, wallet_addr addr, b{000010} s, stateinit <s s, b{0} s, extmsg <s s, b>
+constant msginit
+
+msginit ."External message for initialization is " <s csr. cr
+msginit 2 boc+>B dup Bx. cr
+deployname tuck B>file
+."(Saved wallet creating query to file " type .")" cr

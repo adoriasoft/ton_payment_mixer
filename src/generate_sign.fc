@@ -1,0 +1,28 @@
+var main() {
+    int p1 = 23;
+    int q1 = 59;
+    
+    int p2 = 137;
+    int q2 = 59;
+    
+    int p3 = 103;
+    int q3 = 107;
+    
+    (int d1, int e1, int n1) = generating_keys(p1, q1);
+    (int d2, int e2, int n2) = generating_keys(p2, q2);
+    (int d3, int e3, int n3) = generating_keys(p3, q3);
+    
+    int message = 547;
+    int v = 354;
+    
+    slice value1 = begin_cell().store_uint(e1, 256).store_uint(n1, 256).end_cell().begin_parse();
+    slice value2 = begin_cell().store_uint(e2, 256).store_uint(n2, 256).end_cell().begin_parse();
+    slice value3 = begin_cell().store_uint(e3, 256).store_uint(n3, 256).end_cell().begin_parse();
+    
+    cell array = new_dict();
+    array = udict_set(array, 32, 0, value1);
+    array = udict_set(array, 32, 1, value2);
+    array = udict_set(array, 32, 2, value3);
+    
+    return sign_message(array, 3, message, v, d2, e2, n2);
+}

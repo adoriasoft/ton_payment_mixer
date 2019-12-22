@@ -1,0 +1,6 @@
+"../generated/generate_sign_code.fif" include <s runvmdict .
+dup dup
+0 swap 32 udict@ drop 256 u@
+swap 1 swap 32 udict@ drop 256 u@
+rot 2 swap 32 udict@ drop 256 u@
+.s

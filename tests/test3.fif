@@ -1,0 +1,63 @@
+"../generated/laundromat_code.fif" include <s constant prog
+
+1275 constant e1
+7887 constant e2
+10811 constant e3
+
+1357 constant n1
+8083 constant n2
+11021 constant n3
+
+<b e1 256 u, n1 256 u, b> <s constant pubkey1
+<b e2 256 u, n2 256 u, b> <s constant pubkey2
+<b e3 256 u, n3 256 u, b> <s constant pubkey3
+
+pubkey1 0 dictnew 32 idict! . 
+pubkey2 swap 1 swap 32 idict! .
+pubkey3 swap 2 swap 32 idict! . constant pubkey_array
+
+103835235685005910186741582083202827840114002218372192284974940710643891936425 constant addr1
+103835235685005910186741582083202827840114002218372192284974940710643891936424 constant addr2
+103835235685005910186741582083202827840114002218372192284974940710643891936423 constant addr3
+103835235685005910186741582083202827840114002218372192284974940710643891936422 constant payout_addr
+
+<b b{100} s, -1 8 i, addr1 256 u, b> <s constant addr1
+<b b{100} s, -1 8 i, addr2 256 u, b> <s constant addr2
+<b b{100} s, -1 8 i, addr3 256 u, b> <s constant addr3
+
+<b b{100} s, -1 8 i, payout_addr 256 u, b> <s constant payout_addr
+
+<b addr1 s, 0 8 u, b> <s constant addr1
+<b addr2 s, 0 8 u, b> <s constant addr2
+<b addr3 s, 0 8 u, b> <s constant addr3
+
+addr1 0 dictnew 32 idict! . 
+addr2 swap 1 swap 32 idict! .
+addr3 swap 2 swap 32 idict! . constant approve_addresses
+
+3 constant number_of_participants
+10000000000 constant payment_amount
+0 constant is_successful
+40000000000 constant grams
+
+<b number_of_participants 32 u, payment_amount 64 u, 0 8 u, 0 8 u, is_successful 8 u, 5 4 u, grams 40 u, pubkey_array dict, approve_addresses dict, b> constant state
+
+<b 0 4 u, b{100} s, -1 8 i, 103835235685005910186741582083202827840114002218372192284974940710643891936425 256 u, b> constant in_msg_cell
+
+1356 constant x_1
+485 constant x_2
+11019 constant x_3
+
+
+<b x_1 256 u, b> <s constant x_1
+<b x_2 256 u, b> <s constant x_2
+<b x_3 256 u, b> <s constant x_3
+
+x_1 0 dictnew 32 idict! . 
+x_2 swap 1 swap 32 idict! .
+x_3 swap 2 swap 32 idict! . constant x_array
+
+<b 1 8 u, 0 64 u, payout_addr s, x_array dict, 354 256 u, 547 256 u, b> <s constant in_msg
+
+0 in_msg_cell in_msg 0 prog state runvm
+<s 32 u@+ 64 u@+ 8 u@+ 8 u@+ 8 u@ .s

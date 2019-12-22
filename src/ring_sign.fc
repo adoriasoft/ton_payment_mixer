@@ -1,0 +1,79 @@
+
+int find_min(cell array, int size) {
+    (slice value1, _) = array.udict_get?(32, 0);
+    (slice value2, _) = array.udict_get?(32, 1);
+    
+    int result = min(value1.skip_bits(256).preload_uint(256), value2.skip_bits(256).preload_uint(256));
+    int i = 2;
+    repeat(size - 2) {
+        (slice value, _) = array.udict_get?(32, i); 
+        result = min(result, value.skip_bits(256).preload_uint(256));
+        i += 1;
+    }
+    
+    return result;
+}
+
+;; ring signature algorithm https://www.google.com.ua/search?client=opera&q=ring+signature&sourceid=opera&ie=UTF-8&oe=UTF-8
+;; receives an array with all public keys (e_i, n_i) includes also 'e' and 'n' of the signer 
+;; returns an array with all 'x' elements which are used in the validation algorithm
+cell sign_message(cell pubkey_array, int size, int message, int v, int d, int e, int n) {
+    int min_n = pubkey_array.find_min(size);
+    
+    int c = (v - message) % min_n;
+    
+    ;; array of 'x' values which are used in the signature
+    cell result = new_dict();
+    
+    int i = 0;
+    int index = 0;
+    repeat(size) {
+        (slice value, _) = pubkey_array.udict_get?(32, i);
+        int e_i = value~load_uint(256);
+        if(e != e_i) {
+            int n_i = value.preload_uint(256);
+            int x_i = n_i - 2;
+            c = (c - encrypt(x_i, e_i, n_i)) % min_n;
+            
+            result = result.udict_set(32, i, begin_cell().store_uint(x_i, 256).end_cell().begin_parse());
+        }
+        else {
+            index = i;
+        }
+        i += 1;
+    }
+    
+    c = (c - v) % min_n;
+    
+    ;; add the last 'x' value into the array 
+    ;; all the 'x' values correspond to the order of corresponded elements from the pubkey_array (e_i, n_i, x_i)
+    int x = decrypt(c, d, n);
+    return result.udict_set(32, index, begin_cell().store_uint(x, 256).end_cell().begin_parse());
+}
+
+;; return 1 if signature is correct and -1 when signature is incorrect
+int check_sign(cell pubkey_array, cell x_array, int size, int message, int v) {
+    int min_n = pubkey_array.find_min(size);
+
+    int v1 = (v + message) % min_n;
+    
+    int i = 0;
+    repeat(size) {
+        (slice value, _) = pubkey_array.udict_get?(32, i);
+        int e_i = value~load_uint(256);
+        int n_i = value.preload_uint(256);
+        
+        (value, _) = x_array.udict_get?(32, i);
+        int x_i = value.preload_uint(256);
+        
+        v1 = (v1 + encrypt(x_i, e_i, n_i)) % min_n;
+        i += 1;
+    }
+    
+    if (v1 == v % min_n) {
+        return 1;
+    }
+    else {
+        return 0;
+    }
+}

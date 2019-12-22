@@ -1,0 +1,4 @@
+new wallet address = -1:eedf83ff97d207bd740c54b1b57fa0989113c51b439cd0223d52e58349805d3c 
+(Saving address to file bob-wallet.addr)
+Non-bounceable address (for init): 0f_u34P_l9IHvXQMVLG1f6CYkRPFG0Oc0CI9UuWDSYBdPMHJ
+Bounceable address (for later access): kf_u34P_l9IHvXQMVLG1f6CYkRPFG0Oc0CI9UuWDSYBdPJwM
