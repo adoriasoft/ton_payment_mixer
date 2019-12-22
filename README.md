@@ -91,7 +91,7 @@
       Get last block
       ```bash
       lite-client> last 
-       ```
+      ```
     
       Publish contract
       ```bash
@@ -178,7 +178,7 @@
   
 1. Positive test with correct values
 
-  The expected result of the test1
+  The expected result of the 'test1.fif'
   ```
   0 3bash 10000000000 1 1 1
   ```
@@ -192,21 +192,21 @@
     
 2. Negative test where one of the participants is trying to get more funds
 
-  The expected result of the test2
+  The expected result of the 'test2.fif'
   ```bash
   0 3 10000000000 1 1 0
   ```
  
 3. Negative test with incorrect signature values (x_1 value was changed)
   
-  The expected result of the test3
+  The expected result of the 'test3.fif'
   ```bash
   0 3 10000000000 1 1 0 
   ```
   
 4. Negative test where the contract does not have enough funds and not ready to send money
 
-  The expected result of the test4
+  The expected result of the 'test4.fif'
   ```
   0 3 10000000000 1 0 0 
   ```
