@@ -1,0 +1,46 @@
+// Copyright (c) 2019 adoriasoft
+// Andrey Lekar andrey_lekar@adoriasoft.com
+// Alexey Pozhylenkov alex_pozhilenkov@adoriasoft.com
+// Volodymyr Kostanda ceo@adoriasoft.com
+
+"TonUtil.fif" include
+
+{ ."usage: <query-id> <v> <message> " cr
+  ."Creates a request to send the signature to the laundromat smart contract." cr
+  ."<query-id> defines query id for the message, may remain 0 or 1 for messages from simple wallets." cr
+  ."<v> value which is used in the signature generation and validation (Learn more about ring signatures)" cr
+  ."<message> message which is signed" cr
+  ."Also provide the array of the x elements (ref. ring signature) and payout_addr directly in this smart contract code" cr
+  ."Transfer query body is saved into queries/body-transfer.boc. "
+  ."Query body should not be directly sent to the network. Use wallet.fif script with -B <query-body> parameter "
+  ."to embed query body in the wallet contract query." cr
+  ."Example: " cr
+  ."fift -s transfer.fif 0 @wallets/bob-wallet.addr 10" cr
+  1 halt
+} : usage
+
+$# 3 < ' usage if
+
+$0 parse-int =: query_id
+$1 parse-int =: v
+$2 parse-int =: message
+
+"body-transfer.boc" constant deployname
+
+103835235685005910186741582083202827840114002218372192284974940710643891936422 constant payout_addr
+<b b{100} s, -1 8 i, payout_addr 256 u, b> <s constant payout_addr
+
+<b x_1 256 u, b> <s constant x_1
+<b x_2 256 u, b> <s constant x_2
+<b x_3 256 u, b> <s constant x_3
+
+x_1 0 dictnew 32 idict! . 
+x_2 swap 1 swap 32 idict! .
+x_3 swap 2 swap 32 idict! . constant x_array
+
+<b 1 8 u, query_id 64 u, payout_addr s, x_array dict, v 256 u, message 256 u, b> constant in_msg
+
+in_msg ."Internal message for the contract is " <s csr. cr
+in_msg 2 boc+>B dup Bx. cr
+deployname tuck B>file
+."(Saved contract creating query to file " type .")" cr

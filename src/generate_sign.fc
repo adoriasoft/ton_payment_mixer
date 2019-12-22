@@ -1,3 +1,8 @@
+;; Copyright (c) 2019 adoriasoft
+;; Andrey Lekar andrey_lekar@adoriasoft.com
+;; Alexey Pozhylenkov alex_pozhilenkov@adoriasoft.com
+;; Volodymyr Kostanda ceo@adoriasoft.com
+
 var main() {
     int p1 = 23;
     int q1 = 59;

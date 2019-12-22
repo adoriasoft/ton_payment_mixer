@@ -1,3 +1,8 @@
+;; Copyright (c) 2019 adoriasoft
+;; Andrey Lekar andrey_lekar@adoriasoft.com
+;; Alexey Pozhylenkov alex_pozhilenkov@adoriasoft.com
+;; Volodymyr Kostanda ceo@adoriasoft.com
+
 (int, int) mulmod1(int a, int b, int p) asm "MULDIVMOD";
 
 int mulmod(int a, int b, int p) {

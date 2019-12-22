@@ -292,7 +292,6 @@ PROGRAM{
     8 LDU
     8 LDU
     8 LDU
-    LDGRAMS
     LDDICT
     LDDICT
     ENDS
@@ -300,18 +299,16 @@ PROGRAM{
   store_data PROC:<{
     1 PUSHINT
     NEWC
-    s1 s8 XCHG
+    s1 s7 XCHG
     32 STU
-    s1 s6 XCHG
+    s1 s5 XCHG
     64 STU
-    s1 s6 XCHG
+    s1 s5 XCHG
     8 STU
+    s1 s4 XCHG
     8 STU
-    s1 s3 XCHG
-    8 STU
-    s0 s3 XCHG2
-    STGRAMS
     s1 s2 XCHG
+    8 STU
     STDICT
     STDICT
     ENDC
@@ -376,26 +373,26 @@ PROGRAM{
     LDMSGADDR
     DROP
     load_data CALLDICT
+    s2 POP
     s3 POP
-    s4 POP
+    BALANCE
+    FIRST
     s5 s4 PUSH2
     MUL
-    s1 s(-1) PUXC
     GREATER
     IF:<{
-      s2 POP
+      NIP
       1 PUSHINT
     }>ELSE<{
-      s0 s2 XCHG
+      SWAP
     }>
     DUP
     0 EQINT
     IFJMP:<{
-      s8 POP
-      s8 POP
-      s3 s5 XCHG
-      s4 s3 s0 XCHG3
-      s7 s6 s0 XCHG3
+      s7 POP
+      s7 POP
+      s0 s3 s4 XCHG3
+      s6 s5 XCHG2
       0 PUSHINT
       store_data CALLDICT
       Fail CALLDICT
@@ -406,19 +403,18 @@ PROGRAM{
       send_message CALLDICT
     }>
     Op::check_sign CALLDICT
-    s1 s9 XCHG
+    s1 s8 XCHG
     EQUAL
     IFJMP:<{
-      s0 s4 s5 PUSH3
+      s0 s3 s4 PUSH3
       if_exist CALLDICT
       SWAP
       0 EQINT
       IFJMP:<{
         DROP
-        s8 POP
-        s3 s5 XCHG
-        s4 s3 s0 XCHG3
-        s7 s6 s0 XCHG3
+        s7 POP
+        s0 s3 s4 XCHG3
+        s6 s5 XCHG2
         0 PUSHINT
         store_data CALLDICT
         Fail CALLDICT
@@ -439,10 +435,9 @@ PROGRAM{
       ENDS
       IFJMP:<{
         DROP
-        s8 POP
-        s3 s5 XCHG
-        s4 s3 s0 XCHG3
-        s7 s6 s0 XCHG3
+        s7 POP
+        s0 s3 s4 XCHG3
+        s6 s5 XCHG2
         0 PUSHINT
         store_data CALLDICT
         Fail CALLDICT
@@ -452,47 +447,46 @@ PROGRAM{
         s3 s4 XCHG
         send_message CALLDICT
       }>
-      s0 s9 XCHG
+      s0 s8 XCHG
       LDMSGADDR
       LDDICT
       256 LDU
       256 LDU
       DROP
-      s6 PUSH
+      s5 PUSH
       s3 s1 s3 XCHG3
-      s9 s(-1) s(-1) PUXC2
+      s8 s(-1) s(-1) PUXC2
       check_sign CALLDICT
       IFJMP:<{
         1 PUSHINT
         NEWC
-        s0 s8 XCHG2
+        s0 s7 XCHG2
         STSLICER
-        s1 s7 XCHG
+        s1 s6 XCHG
         8 STU
         ENDC
         CTOS
-        s0 s9 s9 XCHG3
+        s0 s8 s8 XCHG3
         32 PUSHINT
         DICTUSET
-        s3 s4 XCHG
-        1 PUSHINT
-        s3 PUSH
-        s0 s5 XCHG
-        s3 s4 XCHG
         s2 s3 XCHG
-        s8 s9 s9 XCHG3
+        1 PUSHINT
+        s2 PUSH
+        s0 s4 XCHG
+        s3 s8 XCHG
+        s7 s7 XCHG2
         store_data CALLDICT
         Ok CALLDICT
         1 PUSHINT
+        s3 s4 XCHG
         s0 s3 XCHG2
         0 PUSHINT
         send_message CALLDICT
       }>
       DROP
-      s8 POP
-      s3 s5 XCHG
-      s4 s3 s0 XCHG3
-      s7 s6 s0 XCHG3
+      s7 POP
+      s0 s3 s4 XCHG3
+      s6 s5 XCHG2
       0 PUSHINT
       store_data CALLDICT
       Fail CALLDICT
@@ -502,23 +496,23 @@ PROGRAM{
       s3 s4 XCHG
       send_message CALLDICT
     }>
-    9 BLKDROP
+    8 BLKDROP
   }>
   recv_external PROC:<{
     DROP
     load_data CALLDICT
-    s3 POP
-    s0 s4 XCHG
+    s2 POP
+    s0 s3 XCHG
     33 THROWIF
     ACCEPT
-    s1 s2 XCHG
+    SWAP
     1 PUSHINT
     store_data CALLDICT
   }>
   get_public_keys_array PROC:<{
     load_data CALLDICT
-    s1 s6 XCHG
-    6 BLKDROP
+    s1 s5 XCHG
+    5 BLKDROP
     SWAP
   }>
 }END>c

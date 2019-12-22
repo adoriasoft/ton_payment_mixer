@@ -1,7 +1,7 @@
-;;// Copyright (c) 2019 adoriasoft
-;;// Andrey Lekar andrey_lekar@adoriasoft.com
-;;// Alexey Pozhylenkov alex_pozhilenkov@adoriasoft.com
-;;// Volodymyr Kostanda ceo@adoriasoft.com
+;; Copyright (c) 2019 adoriasoft
+;; Andrey Lekar andrey_lekar@adoriasoft.com
+;; Alexey Pozhylenkov alex_pozhilenkov@adoriasoft.com
+;; Volodymyr Kostanda ceo@adoriasoft.com
 
 ;; ---------------------------------- operations defines
 int Op::check_sign()         { return 1;}
@@ -14,17 +14,17 @@ int Fail() { return 1;}
 
 
 () send_message(slice addr, int state, int query_id, int body, int grams, int mode) impure {
-	builder msg = begin_cell()
-		.store_uint (0x18, 6)
-		.store_slice(addr)
-		.store_grams(grams)
-		.store_uint(0, 1 + 4 + 4 + 64 + 32 + 1 + 1)
-		.store_uint(state, 32)
-		.store_uint(query_id, 64);
-	if (body >= 0) {
-		msg~store_uint(body, 32);
-	}
-	send_raw_message(msg.end_cell(), mode);
+    builder msg = begin_cell()
+        .store_uint (0x18, 6)
+        .store_slice(addr)
+        .store_grams(grams)
+        .store_uint(0, 1 + 4 + 4 + 64 + 32 + 1 + 1)
+        .store_uint(state, 32)
+        .store_uint(query_id, 64);
+    if (body >= 0) {
+        msg~store_uint(body, 32);
+    }
+    send_raw_message(msg.end_cell(), mode);
 }
 
 
@@ -37,7 +37,6 @@ _ load_data() {
     ds~load_uint(8),
     ds~load_uint(8),
     ds~load_uint(8),
-    ds~load_grams(),
     ds~load_dict(),
     ds~load_dict()
   );
@@ -46,7 +45,7 @@ _ load_data() {
 }
 
 ;; save data in the contract storage
-() store_data(int number_of_participants, int payment_amount, cell pubkey_array, cell approve_addresses, int money_available, int grams, int is_successful) impure {
+() store_data(int number_of_participants, int payment_amount, cell pubkey_array, cell approve_addresses, int money_available, int is_successful) impure {
   set_data(
     begin_cell()
     .store_uint(number_of_participants, 32)
@@ -54,7 +53,6 @@ _ load_data() {
     .store_uint(1, 8) ;; init flag
     .store_uint(money_available, 8) ;; flag that you can take your money, enables after that contact will received payment_amount * number_of_participants grams
     .store_uint(is_successful, 8) ;; it is a test value
-    .store_grams(grams)
     .store_dict(pubkey_array) ;; contains pubkey array which contains slices ( <b 'e' 256 u, 'n' 256 u, b> <s)
     .store_dict(approve_addresses) ;; contains addresses from which we can get the ring signatures (<b addr1 s, 0 8 u, b>) the second 0 means that this address is already used or not
     .end_cell());
@@ -98,16 +96,15 @@ _ load_data() {
     
     int query_id = in_msg~load_uint(64);
     slice addr = cs~load_msg_addr();
-    
-    
-    (int number_of_participants, int payment_amount, _, int money_available,  _, int grams, cell pubkey_array, cell approve_addresses) = load_data();
-    
-    if(grams > number_of_participants * payment_amount) {
+
+    (int number_of_participants, int payment_amount, _, int money_available,  _, cell pubkey_array, cell approve_addresses) = load_data();
+     
+    if(get_balance().first() > number_of_participants * payment_amount) {
         money_available = 1;
     }
     
     if(money_available == 0) {
-        store_data(number_of_participants, payment_amount, pubkey_array, approve_addresses, money_available, grams, 0);
+        store_data(number_of_participants, payment_amount, pubkey_array, approve_addresses, money_available, 0);
         return send_message(addr, Fail(), query_id, 1, 0, 0);
     }
     
@@ -116,7 +113,7 @@ _ load_data() {
         (int exist, int index) = if_exist(approve_addresses, number_of_participants, addr);
         
         if(exist == 0) {
-            store_data(number_of_participants, payment_amount, pubkey_array, approve_addresses, money_available, grams, 0);
+            store_data(number_of_participants, payment_amount, pubkey_array, approve_addresses, money_available, 0);
             return send_message(addr, Fail(), query_id, 1, 0, 0);
         }
         
@@ -126,7 +123,7 @@ _ load_data() {
         is_used.end_parse();
         
         if(check_value) {
-            store_data(number_of_participants, payment_amount, pubkey_array, approve_addresses, money_available, grams, 0);
+            store_data(number_of_participants, payment_amount, pubkey_array, approve_addresses, money_available, 0);
             return send_message(addr, Fail(), query_id, 1, 0, 0);
         }
         
@@ -138,11 +135,11 @@ _ load_data() {
         if(check_sign(pubkey_array, x_array, number_of_participants, message, v))
         {
             approve_addresses~udict_set(32, index, begin_cell().store_slice(addr).store_uint(1,8).end_cell().begin_parse()); ;; mark as used
-            store_data(number_of_participants, payment_amount, pubkey_array, approve_addresses, money_available, grams, 1);
+            store_data(number_of_participants, payment_amount, pubkey_array, approve_addresses, money_available, 1);
             return send_message(payout_address, Ok(), query_id, 1, payment_amount, 0);
         }
         else {
-            store_data(number_of_participants, payment_amount, pubkey_array, approve_addresses, money_available, grams, 0);
+            store_data(number_of_participants, payment_amount, pubkey_array, approve_addresses, money_available, 0);
             return send_message(addr, Fail(), query_id, 1, 0, 0);
         }
     }
@@ -151,16 +148,16 @@ _ load_data() {
 } 
 
 () recv_external(slice in_msg) impure {
-    (int number_of_participants, int payment_amount, int inited, int money_available, int is_successful, int grams, cell pubkey_array, cell approve_addresses) = load_data();
+    (int number_of_participants, int payment_amount, int inited, int money_available, int is_successful, cell pubkey_array, cell approve_addresses) = load_data();
     throw_if(33, inited);
     accept_message();
     
-    store_data(number_of_participants, payment_amount, pubkey_array, approve_addresses, money_available, grams, 1);
+    store_data(number_of_participants, payment_amount, pubkey_array, approve_addresses, money_available, 1);
 }
 
 
 
 (cell, int) get_public_keys_array() method_id {
-    (int number_of_participants, _, _, _,  _, _, cell pubkey_array, _) = load_data();
+    (int number_of_participants, _, _, _, _, cell pubkey_array, _) = load_data();
     return (pubkey_array, number_of_participants);
 }

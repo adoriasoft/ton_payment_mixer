@@ -1,3 +1,8 @@
+// Copyright (c) 2019 adoriasoft
+// Andrey Lekar andrey_lekar@adoriasoft.com
+// Alexey Pozhylenkov alex_pozhilenkov@adoriasoft.com
+// Volodymyr Kostanda ceo@adoriasoft.com
+
 "../generated/laundromat_code.fif" include <s constant prog
 
 1275 constant e1
@@ -38,16 +43,15 @@ addr3 swap 2 swap 32 idict! . constant approve_addresses
 3 constant number_of_participants
 10000000000 constant payment_amount
 0 constant is_successful
-20000000000 constant grams
+20000000000 constant balance
 
-<b number_of_participants 32 u, payment_amount 64 u, 0 8 u, 0 8 u, is_successful 8 u, 5 4 u, grams 40 u, pubkey_array dict, approve_addresses dict, b> constant state
+<b number_of_participants 32 u, payment_amount 64 u, 0 8 u, 0 8 u, is_successful 8 u, pubkey_array dict, approve_addresses dict, b> constant state
 
 <b 0 4 u, b{100} s, -1 8 i, 103835235685005910186741582083202827840114002218372192284974940710643891936425 256 u, b> constant in_msg_cell
 
-1356 constant x_1
+1355 constant x_1
 485 constant x_2
 11019 constant x_3
-
 
 <b x_1 256 u, b> <s constant x_1
 <b x_2 256 u, b> <s constant x_2
@@ -57,7 +61,12 @@ x_1 0 dictnew 32 idict! .
 x_2 swap 1 swap 32 idict! .
 x_3 swap 2 swap 32 idict! . constant x_array
 
-<b 1 8 u, 0 64 u, payout_addr s, x_array dict, 354 256 u, 547 256 u, b> <s constant in_msg
+354 constant v
+547 constant message
 
-0 in_msg_cell in_msg 0 prog state runvm
+<b 1 8 u, 0 64 u, payout_addr s, x_array dict, v 256 u, message 256 u, b> <s constant in_msg
+
+0 0 0 0 0 0 0 balance 1 tuple 0 0 0 0 0 0 0 0 16 tuple 1 tuple constant c7
+
+0 in_msg_cell in_msg 0 prog state c7 runvmctx
 <s 32 u@+ 64 u@+ 8 u@+ 8 u@+ 8 u@ .s

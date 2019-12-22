@@ -1,3 +1,7 @@
+;; Copyright (c) 2019 adoriasoft
+;; Andrey Lekar andrey_lekar@adoriasoft.com
+;; Alexey Pozhylenkov alex_pozhilenkov@adoriasoft.com
+;; Volodymyr Kostanda ceo@adoriasoft.com
 
 int find_min(cell array, int size) {
     (slice value1, _) = array.udict_get?(32, 0);
