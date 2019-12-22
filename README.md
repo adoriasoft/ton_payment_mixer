@@ -1,16 +1,19 @@
 # Laundromat contract
 
 ### Preparation
+
     You have to already build the func compiler and fift interpreter with the lite client of the TON blockchain.
     You can downloaded it from this link https://github.com/ton-blockchain/ton .
     
 
 ### Description
+
     This is a smart contract which can help to obfuscate your money. It means that any person will not be able to understand from whom to whom your coins was sent.
     This smart contract is based on the ring signatures https://en.wikipedia.org/wiki/Ring_signature and used RSA encryption/decryption algorithms with their public keys https://en.wikipedia.org/wiki/RSA_(cryptosystem).
 
     
 ### Manual
+
     Compile the laundromat.fc
     ``` 
     .\func -AP -o /laundromat/generated/laundromat_code.fif  /laundromat/src/stdlib.fc /laundromat/src/RSA.fc /laundromat/src/ring_sign.fc /laundromat/src/laundromat.fc
