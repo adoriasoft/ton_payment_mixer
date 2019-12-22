@@ -5,11 +5,7 @@
 
 "TonUtil.fif" include
 
-{ ."usage: <query-id> <v> <message> " cr
-  ."Creates a request to send the signature to the laundromat smart contract." cr
-  ."<query-id> defines query id for the message, may remain 0 or 1 for messages from simple wallets." cr
-  ."<v> value which is used in the signature generation and validation (Learn more about ring signatures)" cr
-  ."<message> message which is signed" cr
+{   ."Creates a request to send the signature to the laundromat smart contract." cr
   ."Also provide the array of the x elements (ref. ring signature) and payout_addr directly in this smart contract code" cr
   ."Transfer query body is saved into queries/body-transfer.boc. "
   ."Query body should not be directly sent to the network. Use wallet.fif script with -B <query-body> parameter "
@@ -21,14 +17,18 @@
 
 $# 3 < ' usage if
 
-$0 parse-int =: query_id
-$1 parse-int =: v
-$2 parse-int =: message
+0 constant query_id // defines query id for the message, may remain 0 or 1 for messages from simple wallets.
+354 constant v // value which is used in the signature generation and validation (Learn more about ring signatures)
+547 constant message // message which is signed
 
 "body-transfer.boc" constant deployname
 
 103835235685005910186741582083202827840114002218372192284974940710643891936422 constant payout_addr
 <b b{100} s, -1 8 i, payout_addr 256 u, b> <s constant payout_addr
+
+1355 constant x_1
+485 constant x_2
+11019 constant x_3
 
 <b x_1 256 u, b> <s constant x_1
 <b x_2 256 u, b> <s constant x_2
