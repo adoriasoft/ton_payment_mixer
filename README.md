@@ -210,3 +210,17 @@
   ```
   0 3 10000000000 1 0 0 
   ```
+
+### Deployment
+
+Test contract is deployed at address kf-93zlLn8V8_oAG91k3cWSEOD-GpXMxI_LwSFtBNPT5RXOu in the TON testnet2.
+
+### Future improvements
+
+1. Better public keys handling
+
+Users should not directly change hardcoded script values.
+
+2. Better ring signatures with some fraction of the private key added
+
+This will allow to not require users to collect output address prior to creating a mixer contract.
